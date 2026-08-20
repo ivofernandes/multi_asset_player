@@ -1,12 +1,52 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:multi_asset_player/multi_asset_player.dart';
 
 void main() {
-  test('adds one to input values', () {
-    final calculator = Calculator();
-    expect(calculator.addOne(2), 3);
-    expect(calculator.addOne(-7), -6);
-    expect(calculator.addOne(0), 1);
+  test('selects a viewer using a case-insensitive extension', () {
+    expect(MultiAssetPlayer.typeFor('assets/photo.PNG'), MultiAssetType.image);
+    expect(MultiAssetPlayer.typeFor('assets/icon.svg'), MultiAssetType.svg);
+    expect(MultiAssetPlayer.typeFor('assets/data.json?version=1'), MultiAssetType.json);
+    expect(MultiAssetPlayer.typeFor('assets/readme.txt'), MultiAssetType.text);
+    expect(MultiAssetPlayer.typeFor('assets/manual.pdf'), MultiAssetType.unsupported);
   });
+
+  testWidgets('text assets can be searched by line', (tester) async {
+    final bundle = _MemoryAssetBundle({
+      'notes.txt': 'apples\nbananas\napricots',
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: MultiAssetPlayer('notes.txt', bundle: bundle)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('apples\nbananas\napricots'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'ap');
+    await tester.pump();
+    expect(find.text('apples\napricots'), findsOneWidget);
+  });
+
+  testWidgets('unsupported assets show a useful message', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: MultiAssetPlayer('assets/manual.pdf')),
+      ),
+    );
+    expect(find.text('Unsupported asset type: assets/manual.pdf'), findsOneWidget);
+  });
+}
+
+class _MemoryAssetBundle extends CachingAssetBundle {
+  _MemoryAssetBundle(this.assets);
+
+  final Map<String, String> assets;
+
+  @override
+  Future<ByteData> load(String key) async {
+    final bytes = Uint8List.fromList(assets[key]!.codeUnits);
+    return ByteData.sublistView(bytes);
+  }
 }

@@ -1,39 +1,39 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# Multi Asset Player
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
+`MultiAssetPlayer` is one Flutter widget for displaying several common bundled
+asset formats. It selects a suitable viewer from the filename extension:
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
-
-## Features
-
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+- PNG, JPEG, GIF, WebP, and BMP files use Flutter's image viewer.
+- SVG files use `flutter_svg`.
+- JSON files use an expandable structured `json_view` viewer.
+- TXT, Markdown, CSV, and log files use a selectable, searchable text viewer.
 
 ## Getting started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+Register assets in the consuming application's `pubspec.yaml`:
 
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
-
-```dart
-const like = 'sample';
+```yaml
+flutter:
+  assets:
+    - assets/
 ```
 
-## Additional information
+Then place a viewer anywhere in the widget tree:
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+```dart
+import 'package:multi_asset_player/multi_asset_player.dart';
+
+const MultiAssetPlayer('assets/logo.png')
+```
+
+The same API works for every supported format:
+
+```dart
+const MultiAssetPlayer('assets/logo.svg')
+const MultiAssetPlayer('assets/readme.txt')
+const MultiAssetPlayer('assets/config.json')
+```
+
+Text files include a search box that filters the document to matching lines.
+Use `fit` to control image layout, `package` for assets supplied by another
+package, or `bundle` to provide a custom `AssetBundle`.

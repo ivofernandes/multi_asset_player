@@ -1,5 +1,5 @@
 name: multi_asset_player
-description: "A new Flutter package project."
+description: A Flutter widget that automatically presents image, SVG, text, and JSON assets.
 version: 0.0.1
 homepage:
 
@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_svg: ^2.2.0
+  json_view: ^0.4.2
 
 dev_dependencies:
   flutter_test:
