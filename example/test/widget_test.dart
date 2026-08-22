@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('shows a tab for every example asset type', (tester) async {
+  testWidgets('discovers example assets from the generated manifest', (tester) async {
     await tester.pumpWidget(const ExampleApp());
+    await tester.pumpAndSettle();
 
-    expect(find.byType(Tab), findsNWidgets(4));
-    expect(find.text('Image'), findsOneWidget);
-    expect(find.text('SVG'), findsOneWidget);
-    expect(find.text('Text'), findsOneWidget);
-    expect(find.text('JSON'), findsOneWidget);
+    expect(find.text('Asset manifest gallery'), findsOneWidget);
+    expect(find.text('logo.png'), findsOneWidget);
+    expect(find.text('logo.png.pdf'), findsOneWidget);
+    expect(find.text('config.json'), findsOneWidget);
   });
 }

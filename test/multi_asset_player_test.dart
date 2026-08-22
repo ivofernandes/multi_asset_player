@@ -7,9 +7,15 @@ void main() {
   test('selects a viewer using a case-insensitive extension', () {
     expect(MultiAssetPlayer.typeFor('assets/photo.PNG'), MultiAssetType.image);
     expect(MultiAssetPlayer.typeFor('assets/icon.svg'), MultiAssetType.svg);
-    expect(MultiAssetPlayer.typeFor('assets/data.json?version=1'), MultiAssetType.json);
+    expect(
+      MultiAssetPlayer.typeFor('assets/data.json?version=1'),
+      MultiAssetType.json,
+    );
     expect(MultiAssetPlayer.typeFor('assets/readme.txt'), MultiAssetType.text);
-    expect(MultiAssetPlayer.typeFor('assets/manual.pdf'), MultiAssetType.unsupported);
+    expect(MultiAssetPlayer.typeFor('assets/manual.pdf'), MultiAssetType.pdf);
+    expect(MultiAssetPlayer.typeFor('assets/movie.MP4'), MultiAssetType.video);
+    expect(MultiAssetPlayer.typeFor('assets/music.mp3'), MultiAssetType.audio);
+    expect(MultiAssetPlayer.typeFor('assets/music.wav'), MultiAssetType.audio);
   });
 
   testWidgets('text assets can be searched by line', (tester) async {
@@ -32,10 +38,13 @@ void main() {
   testWidgets('unsupported assets show a useful message', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(body: MultiAssetPlayer('assets/manual.pdf')),
+        home: Scaffold(body: MultiAssetPlayer('assets/archive.zip')),
       ),
     );
-    expect(find.text('Unsupported asset type: assets/manual.pdf'), findsOneWidget);
+    expect(
+      find.text('Unsupported asset type: assets/archive.zip'),
+      findsOneWidget,
+    );
   });
 }
 

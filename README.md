@@ -7,6 +7,9 @@ asset formats. It selects a suitable viewer from the filename extension:
 - SVG files use `flutter_svg`.
 - JSON files use an expandable structured `json_view` viewer.
 - TXT, Markdown, CSV, and log files use a selectable, searchable text viewer.
+- PDF files use an interactive document viewer.
+- MP4, M4V, MOV, WebM, AVI, and MKV files use a video player.
+- MP3, WAV, M4A, AAC, Ogg, Opus, and FLAC files use an audio player.
 
 ## Getting started
 
@@ -32,8 +35,15 @@ The same API works for every supported format:
 const MultiAssetPlayer('assets/logo.svg')
 const MultiAssetPlayer('assets/readme.txt')
 const MultiAssetPlayer('assets/config.json')
+const MultiAssetPlayer('assets/manual.pdf')
+const MultiAssetPlayer('assets/demo.mp4')
+const MultiAssetPlayer('assets/song.mp3')
 ```
 
 Text files include a search box that filters the document to matching lines.
 Use `fit` to control image layout, `package` for assets supplied by another
 package, or `bundle` to provide a custom `AssetBundle`.
+
+The example application reads Flutter's generated `AssetManifest` at runtime,
+so every file registered beneath its `assets/` directory automatically appears
+in the gallery without another hard-coded tab or route.
