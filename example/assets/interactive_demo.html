@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Interactive HTML asset</title>
+    <style>
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+      body { margin: 0; padding: 2rem; background: #eef2ff; color: #1e1b4b; }
+      main { max-width: 38rem; margin: auto; }
+      article { padding: 1.5rem; border-radius: 1rem; background: white; box-shadow: 0 8px 24px #312e8130; }
+      button { padding: .7rem 1rem; border: 0; border-radius: 2rem; background: #4f46e5; color: white; font-weight: 700; }
+      output { display: block; margin-top: 1rem; font-size: 1.15rem; }
+    </style>
+  </head>
+  <body>
+    <header><h1>HTML asset player</h1></header>
+    <main>
+      <article>
+        <h2>JavaScript is running</h2>
+        <p>This bundled document uses semantic HTML, local CSS, and a script.</p>
+        <button id="counter" type="button">Count a click</button>
+        <output id="result" for="counter">Clicks: 0</output>
+      </article>
+    </main>
+    <footer><small>Rendered inside MultiAssetPlayer's WebView.</small></footer>
+    <script>
+      let clicks = 0;
+      document.querySelector('#counter').addEventListener('click', () => {
+        document.querySelector('#result').value = `Clicks: ${++clicks}`;
+      });
+    </script>
+  </body>
+</html>

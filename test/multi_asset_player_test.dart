@@ -12,6 +12,11 @@ void main() {
       MultiAssetType.json,
     );
     expect(MultiAssetPlayer.typeFor('assets/readme.txt'), MultiAssetType.text);
+    expect(MultiAssetPlayer.typeFor('assets/demo.HTML'), MultiAssetType.html);
+    expect(
+      MultiAssetPlayer.typeFor('assets/legacy.htm#section'),
+      MultiAssetType.html,
+    );
     expect(MultiAssetPlayer.typeFor('assets/manual.pdf'), MultiAssetType.pdf);
     expect(MultiAssetPlayer.typeFor('assets/movie.MP4'), MultiAssetType.video);
     expect(MultiAssetPlayer.typeFor('assets/music.mp3'), MultiAssetType.audio);

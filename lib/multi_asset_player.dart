@@ -5,9 +5,20 @@ import 'package:just_audio/just_audio.dart';
 import 'package:json_view/json_view.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:video_player/video_player.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 /// The kind of viewer selected for an asset.
-enum MultiAssetType { image, svg, text, json, pdf, video, audio, unsupported }
+enum MultiAssetType {
+  image,
+  svg,
+  text,
+  json,
+  html,
+  pdf,
+  video,
+  audio,
+  unsupported,
+}
 
 /// Displays a bundled asset with a viewer selected from its file extension.
 ///
@@ -48,6 +59,9 @@ class MultiAssetPlayer extends StatelessWidget {
     }
     if (extension == 'svg') return MultiAssetType.svg;
     if (extension == 'json') return MultiAssetType.json;
+    if (const {'html', 'htm'}.contains(extension)) {
+      return MultiAssetType.html;
+    }
     if (extension == 'pdf') return MultiAssetType.pdf;
     if (const {'mp4', 'm4v', 'mov', 'webm', 'avi', 'mkv'}.contains(extension)) {
       return MultiAssetType.video;
@@ -97,6 +111,8 @@ class MultiAssetPlayer extends StatelessWidget {
         );
       case MultiAssetType.json:
         return _JsonAsset(asset: _assetKey(asset, package), bundle: bundle);
+      case MultiAssetType.html:
+        return _HtmlAsset(asset: _assetKey(asset, package), bundle: bundle);
       case MultiAssetType.pdf:
         return PdfViewer.asset(_assetKey(asset, package));
       case MultiAssetType.video:
@@ -119,6 +135,48 @@ class MultiAssetPlayer extends StatelessWidget {
     return _AssetMessage(
       icon: Icons.broken_image_outlined,
       message: 'Unable to load $asset',
+    );
+  }
+}
+
+class _HtmlAsset extends StatefulWidget {
+  const _HtmlAsset({required this.asset, this.bundle});
+
+  final String asset;
+  final AssetBundle? bundle;
+
+  @override
+  State<_HtmlAsset> createState() => _HtmlAssetState();
+}
+
+class _HtmlAssetState extends State<_HtmlAsset> {
+  late final Future<WebViewController> _controller = _initialize();
+
+  Future<WebViewController> _initialize() async {
+    final html = await (widget.bundle ?? rootBundle).loadString(widget.asset);
+    final controller = WebViewController();
+    await controller.setJavaScriptMode(JavaScriptMode.unrestricted);
+    await controller.setBackgroundColor(Colors.transparent);
+    await controller.loadHtmlString(html);
+    return controller;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<WebViewController>(
+      future: _controller,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return _AssetMessage(
+            icon: Icons.error_outline,
+            message: 'Unable to load ${widget.asset}',
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return WebViewWidget(controller: snapshot.data!);
+      },
     );
   }
 }
