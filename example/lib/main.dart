@@ -28,6 +28,8 @@ class AssetGallery extends StatefulWidget {
 }
 
 class _AssetGalleryState extends State<AssetGallery> {
+  static const _wideLayoutBreakpoint = 700.0;
+
   late final Future<List<String>> _assets = _loadAssets();
   String? _selectedAsset;
 
@@ -62,35 +64,162 @@ class _AssetGalleryState extends State<AssetGallery> {
             return const Center(child: Text('No files were found in assets/'));
           }
           final selected = _selectedAsset ?? assets.first;
-          return Row(
-            children: [
-              SizedBox(
-                width: 260,
-                child: ListView.builder(
-                  itemCount: assets.length,
-                  itemBuilder: (context, index) {
-                    final asset = assets[index];
-                    return ListTile(
-                      selected: selected == asset,
-                      title: Text(asset.substring('assets/'.length)),
-                      subtitle: Text(MultiAssetPlayer.typeFor(asset).name),
-                      onTap: () => setState(() => _selectedAsset = asset),
-                    );
-                  },
-                ),
-              ),
-              const VerticalDivider(width: 1),
-              Expanded(
-                child: MultiAssetPlayer(
-                  selected,
-                  key: ValueKey(selected),
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < _wideLayoutBreakpoint) {
+                return _CompactGallery(
+                  assets: assets,
+                  selected: selected,
                   bundle: widget.bundle,
-                ),
-              ),
-            ],
+                  onSelected: _selectAsset,
+                );
+              }
+
+              return Row(
+                children: [
+                  SizedBox(
+                    width: 280,
+                    child: _AssetList(
+                      assets: assets,
+                      selected: selected,
+                      onSelected: _selectAsset,
+                    ),
+                  ),
+                  const VerticalDivider(width: 1),
+                  Expanded(child: _playerFor(selected)),
+                ],
+              );
+            },
           );
         },
       ),
     );
   }
+
+  void _selectAsset(String asset) => setState(() => _selectedAsset = asset);
+
+  Widget _playerFor(String asset) => MultiAssetPlayer(
+    asset,
+    key: ValueKey(asset),
+    bundle: widget.bundle,
+  );
+}
+
+class _CompactGallery extends StatelessWidget {
+  const _CompactGallery({
+    required this.assets,
+    required this.selected,
+    required this.onSelected,
+    this.bundle,
+  });
+
+  final List<String> assets;
+  final String selected;
+  final ValueChanged<String> onSelected;
+  final AssetBundle? bundle;
+
+  @override
+  Widget build(BuildContext context) {
+    final filename = selected.substring('assets/'.length);
+    return Column(
+      children: [
+        Material(
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
+          child: ListTile(
+            leading: const Icon(Icons.folder_open_outlined),
+            title: Text(filename, maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle: Text(MultiAssetPlayer.typeFor(selected).name),
+            trailing: const Icon(Icons.expand_more),
+            onTap: () => _showAssetPicker(context),
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: MultiAssetPlayer(
+            selected,
+            key: ValueKey(selected),
+            bundle: bundle,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showAssetPicker(BuildContext context) async {
+    final asset = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 640),
+      builder: (context) => SafeArea(
+        child: FractionallySizedBox(
+          heightFactor: 0.75,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                child: Text(
+                  'Choose an asset',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              Expanded(
+                child: _AssetList(
+                  assets: assets,
+                  selected: selected,
+                  onSelected: (asset) => Navigator.pop(context, asset),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (asset != null) onSelected(asset);
+  }
+}
+
+class _AssetList extends StatelessWidget {
+  const _AssetList({
+    required this.assets,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final List<String> assets;
+  final String selected;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: assets.length,
+      itemBuilder: (context, index) {
+        final asset = assets[index];
+        return ListTile(
+          selected: selected == asset,
+          leading: Icon(_iconFor(MultiAssetPlayer.typeFor(asset))),
+          title: Text(
+            asset.substring('assets/'.length),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(MultiAssetPlayer.typeFor(asset).name),
+          onTap: () => onSelected(asset),
+        );
+      },
+    );
+  }
+
+  IconData _iconFor(MultiAssetType type) => switch (type) {
+    MultiAssetType.image || MultiAssetType.svg => Icons.image_outlined,
+    MultiAssetType.video => Icons.movie_outlined,
+    MultiAssetType.audio => Icons.audio_file_outlined,
+    MultiAssetType.pdf => Icons.picture_as_pdf_outlined,
+    MultiAssetType.html => Icons.language_outlined,
+    MultiAssetType.json => Icons.data_object,
+    MultiAssetType.text => Icons.description_outlined,
+    MultiAssetType.unsupported => Icons.insert_drive_file_outlined,
+  };
 }
