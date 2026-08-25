@@ -1,17 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:json_view/json_view.dart';
-import 'package:pdfrx/pdfrx.dart';
-import 'package:video_player/video_player.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'src/image_asset_player.dart';
+import 'src/svg_asset_player.dart';
+import 'src/pdf_asset_player.dart';
+import 'src/html_asset_player.dart';
+import 'src/video_asset_player.dart';
+import 'src/audio_asset_player.dart';
+import 'src/text_asset_player.dart';
+import 'src/csv_asset_player.dart';
+import 'src/json/json_asset_player.dart';
+import 'src/asset_message.dart';
+
+export 'src/image_asset_player.dart';
+export 'src/svg_asset_player.dart';
+export 'src/pdf_asset_player.dart';
+export 'src/html_asset_player.dart';
+export 'src/video_asset_player.dart';
+export 'src/audio_asset_player.dart';
+export 'src/text_asset_player.dart';
+export 'src/csv_asset_player.dart';
+export 'src/json/json_asset_player.dart';
+export 'src/json/json_tree_node.dart';
 
 /// The kind of viewer selected for an asset.
 enum MultiAssetType {
   image,
   svg,
   text,
+  csv,
   json,
   html,
   pdf,
@@ -77,7 +93,8 @@ class MultiAssetPlayer extends StatelessWidget {
     }.contains(extension)) {
       return MultiAssetType.audio;
     }
-    if (const {'txt', 'md', 'markdown', 'csv', 'log'}.contains(extension)) {
+    if (extension == 'csv') return MultiAssetType.csv;
+    if (const {'txt', 'md', 'markdown', 'log'}.contains(extension)) {
       return MultiAssetType.text;
     }
     return MultiAssetType.unsupported;
@@ -87,40 +104,47 @@ class MultiAssetPlayer extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (typeFor(asset)) {
       case MultiAssetType.image:
-        return Image.asset(
+        return ImageAssetPlayer(
           asset,
           bundle: bundle,
           package: package,
           fit: fit,
-          errorBuilder: _errorBuilder,
         );
       case MultiAssetType.svg:
-        return SvgPicture.asset(
+        return SvgAssetPlayer(
           asset,
           bundle: bundle,
           package: package,
           fit: fit,
-          placeholderBuilder: (_) => const Center(
-            child: CircularProgressIndicator(),
-          ),
         );
       case MultiAssetType.text:
-        return _SearchableTextAsset(
+        return TextAssetPlayer(
+          asset: _assetKey(asset, package),
+          bundle: bundle,
+        );
+      case MultiAssetType.csv:
+        return CsvAssetPlayer(
           asset: _assetKey(asset, package),
           bundle: bundle,
         );
       case MultiAssetType.json:
-        return _JsonAsset(asset: _assetKey(asset, package), bundle: bundle);
+        return JsonAssetPlayer(
+          asset: _assetKey(asset, package),
+          bundle: bundle,
+        );
       case MultiAssetType.html:
-        return _HtmlAsset(asset: _assetKey(asset, package), bundle: bundle);
+        return HtmlAssetPlayer(
+          asset: _assetKey(asset, package),
+          bundle: bundle,
+        );
       case MultiAssetType.pdf:
-        return PdfViewer.asset(_assetKey(asset, package));
+        return PdfAssetPlayer(asset: _assetKey(asset, package));
       case MultiAssetType.video:
-        return _VideoAsset(asset: _assetKey(asset, package));
+        return VideoAssetPlayer(asset: asset, package: package);
       case MultiAssetType.audio:
-        return _AudioAsset(asset: _assetKey(asset, package));
+        return AudioAssetPlayer(asset: _assetKey(asset, package));
       case MultiAssetType.unsupported:
-        return _AssetMessage(
+        return AssetMessage(
           icon: Icons.insert_drive_file_outlined,
           message: 'Unsupported asset type: $asset',
         );
@@ -129,350 +153,5 @@ class MultiAssetPlayer extends StatelessWidget {
 
   static String _assetKey(String asset, String? package) {
     return package == null ? asset : 'packages/$package/$asset';
-  }
-
-  Widget _errorBuilder(BuildContext context, Object error, StackTrace? stack) {
-    return _AssetMessage(
-      icon: Icons.broken_image_outlined,
-      message: 'Unable to load $asset',
-    );
-  }
-}
-
-class _HtmlAsset extends StatefulWidget {
-  const _HtmlAsset({required this.asset, this.bundle});
-
-  final String asset;
-  final AssetBundle? bundle;
-
-  @override
-  State<_HtmlAsset> createState() => _HtmlAssetState();
-}
-
-class _HtmlAssetState extends State<_HtmlAsset> {
-  late final Future<WebViewController> _controller = _initialize();
-
-  Future<WebViewController> _initialize() async {
-    final html = await (widget.bundle ?? rootBundle).loadString(widget.asset);
-    final controller = WebViewController();
-    await controller.setJavaScriptMode(JavaScriptMode.unrestricted);
-    await controller.setBackgroundColor(Colors.transparent);
-    await controller.loadHtmlString(html);
-    return controller;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<WebViewController>(
-      future: _controller,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return _AssetMessage(
-            icon: Icons.error_outline,
-            message: 'Unable to load ${widget.asset}',
-          );
-        }
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return WebViewWidget(controller: snapshot.data!);
-      },
-    );
-  }
-}
-
-class _VideoAsset extends StatefulWidget {
-  const _VideoAsset({required this.asset});
-
-  final String asset;
-
-  @override
-  State<_VideoAsset> createState() => _VideoAssetState();
-}
-
-class _VideoAssetState extends State<_VideoAsset> {
-  late final VideoPlayerController _controller;
-  late final Future<void> _initialized;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.asset(widget.asset);
-    _initialized = _controller.initialize();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<void>(
-      future: _initialized,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return _AssetMessage(
-            icon: Icons.error_outline,
-            message: 'Unable to play ${widget.asset}',
-          );
-        }
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: VideoPlayer(_controller),
-                ),
-              ),
-            ),
-            VideoProgressIndicator(_controller, allowScrubbing: true),
-            IconButton(
-              tooltip: _controller.value.isPlaying ? 'Pause' : 'Play',
-              icon: Icon(
-                _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
-              ),
-              onPressed: () {
-                setState(() {
-                  _controller.value.isPlaying
-                      ? _controller.pause()
-                      : _controller.play();
-                });
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _AudioAsset extends StatefulWidget {
-  const _AudioAsset({required this.asset});
-
-  final String asset;
-
-  @override
-  State<_AudioAsset> createState() => _AudioAssetState();
-}
-
-class _AudioAssetState extends State<_AudioAsset> {
-  late final AudioPlayer _player;
-  late final Future<Duration?> _initialized;
-
-  @override
-  void initState() {
-    super.initState();
-    _player = AudioPlayer();
-    _initialized = _player.setAsset(widget.asset);
-  }
-
-  @override
-  void dispose() {
-    _player.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<Duration?>(
-      future: _initialized,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return _AssetMessage(
-            icon: Icons.error_outline,
-            message: 'Unable to play ${widget.asset}',
-          );
-        }
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return Center(
-          child: StreamBuilder<PlayerState>(
-            stream: _player.playerStateStream,
-            builder: (context, state) {
-              final playing = state.data?.playing ?? false;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.audio_file, size: 72),
-                  const SizedBox(height: 16),
-                  Text(widget.asset, textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  StreamBuilder<Duration>(
-                    stream: _player.positionStream,
-                    builder: (context, position) {
-                      final duration = _player.duration ?? Duration.zero;
-                      final value = position.data ?? Duration.zero;
-                      return Slider(
-                        max: duration.inMilliseconds
-                            .toDouble()
-                            .clamp(1.0, double.infinity)
-                            .toDouble(),
-                        value: value.inMilliseconds
-                            .clamp(0, duration.inMilliseconds)
-                            .toDouble(),
-                        onChanged: (milliseconds) => _player.seek(
-                          Duration(milliseconds: milliseconds.round()),
-                        ),
-                      );
-                    },
-                  ),
-                  IconButton.filled(
-                    tooltip: playing ? 'Pause' : 'Play',
-                    icon: Icon(playing ? Icons.pause : Icons.play_arrow),
-                    onPressed: playing ? _player.pause : _player.play,
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _SearchableTextAsset extends StatefulWidget {
-  const _SearchableTextAsset({required this.asset, this.bundle});
-
-  final String asset;
-  final AssetBundle? bundle;
-
-  @override
-  State<_SearchableTextAsset> createState() => _SearchableTextAssetState();
-}
-
-class _SearchableTextAssetState extends State<_SearchableTextAsset> {
-  late final Future<String> _content;
-  String _query = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _content = (widget.bundle ?? rootBundle).loadString(widget.asset);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: TextField(
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'Search text',
-              prefixIcon: Icon(Icons.search),
-            ),
-            onChanged: (value) => setState(() => _query = value),
-          ),
-        ),
-        Expanded(
-          child: FutureBuilder<String>(
-            future: _content,
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return _AssetMessage(
-                  icon: Icons.error_outline,
-                  message: 'Unable to load ${widget.asset}',
-                );
-              }
-              if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              final text = snapshot.data!;
-              final matches = _query.isEmpty
-                  ? text
-                  : text
-                        .split('\n')
-                        .where(
-                          (line) => line.toLowerCase().contains(
-                            _query.toLowerCase(),
-                          ),
-                        )
-                        .join('\n');
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(12),
-                child: SelectableText(
-                  matches,
-                  style: const TextStyle(fontFamily: 'monospace'),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _JsonAsset extends StatefulWidget {
-  const _JsonAsset({required this.asset, this.bundle});
-
-  final String asset;
-  final AssetBundle? bundle;
-
-  @override
-  State<_JsonAsset> createState() => _JsonAssetState();
-}
-
-class _JsonAssetState extends State<_JsonAsset> {
-  late final Future<String> _content;
-
-  @override
-  void initState() {
-    super.initState();
-    _content = (widget.bundle ?? rootBundle).loadString(widget.asset);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: _content,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return _AssetMessage(
-            icon: Icons.error_outline,
-            message: 'Unable to load ${widget.asset}',
-          );
-        }
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(8),
-          child: JsonView(json: snapshot.data!),
-        );
-      },
-    );
-  }
-}
-
-class _AssetMessage extends StatelessWidget {
-  const _AssetMessage({required this.icon, required this.message});
-
-  final IconData icon;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 40),
-          const SizedBox(height: 8),
-          Text(message, textAlign: TextAlign.center),
-        ],
-      ),
-    );
   }
 }

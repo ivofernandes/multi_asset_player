@@ -219,6 +219,7 @@ class _AssetList extends StatelessWidget {
     MultiAssetType.pdf => Icons.picture_as_pdf_outlined,
     MultiAssetType.html => Icons.language_outlined,
     MultiAssetType.json => Icons.data_object,
+    MultiAssetType.csv => Icons.table_chart_outlined,
     MultiAssetType.text => Icons.description_outlined,
     MultiAssetType.unsupported => Icons.insert_drive_file_outlined,
   };

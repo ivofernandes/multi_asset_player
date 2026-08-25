@@ -29,3 +29,6 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 /build/
 /coverage/
+/example/assets/music.m4a
+/example/assets/video.mkv
+/example/assets/video.mp4
