@@ -128,7 +128,6 @@ class _CompactGallery extends StatelessWidget {
           child: ListTile(
             leading: const Icon(Icons.folder_open_outlined),
             title: Text(filename, maxLines: 1, overflow: TextOverflow.ellipsis),
-            subtitle: Text(MultiAssetPlayer.typeFor(selected).name),
             trailing: const Icon(Icons.expand_more),
             onTap: () => _showAssetPicker(context),
           ),
@@ -199,28 +198,15 @@ class _AssetList extends StatelessWidget {
         final asset = assets[index];
         return ListTile(
           selected: selected == asset,
-          leading: Icon(_iconFor(MultiAssetPlayer.typeFor(asset))),
+          leading: const Icon(Icons.insert_drive_file_outlined),
           title: Text(
             asset.substring('assets/'.length),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          subtitle: Text(MultiAssetPlayer.typeFor(asset).name),
           onTap: () => onSelected(asset),
         );
       },
     );
   }
-
-  IconData _iconFor(MultiAssetType type) => switch (type) {
-    MultiAssetType.image || MultiAssetType.svg => Icons.image_outlined,
-    MultiAssetType.video => Icons.movie_outlined,
-    MultiAssetType.audio => Icons.audio_file_outlined,
-    MultiAssetType.pdf => Icons.picture_as_pdf_outlined,
-    MultiAssetType.html => Icons.language_outlined,
-    MultiAssetType.json => Icons.data_object,
-    MultiAssetType.csv => Icons.table_chart_outlined,
-    MultiAssetType.text => Icons.description_outlined,
-    MultiAssetType.unsupported => Icons.insert_drive_file_outlined,
-  };
 }

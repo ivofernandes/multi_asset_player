@@ -4,39 +4,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multi_asset_player/multi_asset_player.dart';
 
 void main() {
-  test('selects a viewer using a case-insensitive extension', () {
-    expect(MultiAssetPlayer.typeFor('assets/photo.PNG'), MultiAssetType.image);
-    expect(MultiAssetPlayer.typeFor('assets/icon.svg'), MultiAssetType.svg);
-    expect(
-      MultiAssetPlayer.typeFor('assets/data.json?version=1'),
-      MultiAssetType.json,
-    );
-    expect(MultiAssetPlayer.typeFor('assets/readme.txt'), MultiAssetType.text);
-    expect(MultiAssetPlayer.typeFor('assets/table.csv'), MultiAssetType.csv);
-    expect(MultiAssetPlayer.typeFor('assets/demo.HTML'), MultiAssetType.html);
-    expect(
-      MultiAssetPlayer.typeFor('assets/legacy.htm#section'),
-      MultiAssetType.html,
-    );
-    expect(MultiAssetPlayer.typeFor('assets/manual.pdf'), MultiAssetType.pdf);
-    expect(MultiAssetPlayer.typeFor('assets/movie.MP4'), MultiAssetType.video);
-    expect(MultiAssetPlayer.typeFor('assets/music.mp3'), MultiAssetType.audio);
-    expect(MultiAssetPlayer.typeFor('assets/music.wav'), MultiAssetType.audio);
-  });
-
-  testWidgets('selects a dedicated widget for each asset category', (
-    tester,
-  ) async {
+  testWidgets('selects viewers through the single public widget', (tester) async {
     final bundle = _MemoryAssetBundle({
       'notes.txt': 'hello',
       'table.csv': 'name,value\none,1',
       'data.json': '{"name":"one"}',
     });
 
-    for (final entry in <String, Type>{
-      'notes.txt': TextAssetPlayer,
-      'table.csv': CsvAssetPlayer,
-      'data.json': JsonAssetPlayer,
+    for (final entry in <String, Finder>{
+      'notes.txt': find.byType(TextField),
+      'table.csv': find.byType(DataTable),
+      'data.json': find.textContaining('name'),
     }.entries) {
       await tester.pumpWidget(
         MaterialApp(
@@ -45,7 +23,8 @@ void main() {
           ),
         ),
       );
-      expect(find.byType(entry.value), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(entry.value, findsWidgets);
     }
   });
 
@@ -66,7 +45,9 @@ void main() {
     expect(find.text('includes, comma'), findsOneWidget);
   });
 
-  testWidgets('text assets can be searched by line', (tester) async {
+  testWidgets('text search highlights matches without filtering lines', (
+    tester,
+  ) async {
     final bundle = _MemoryAssetBundle({
       'notes.txt': 'apples\nbananas\napricots',
     });
@@ -77,10 +58,46 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('apples\nbananas\napricots'), findsOneWidget);
+    expect(find.text('bananas'), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'ap');
     await tester.pump();
-    expect(find.text('apples\napricots'), findsOneWidget);
+    expect(find.text('bananas'), findsOneWidget);
+
+    final highlighted = tester
+        .widgetList<SelectableText>(find.byType(SelectableText))
+        .expand((text) => text.textSpan!.children ?? const <InlineSpan>[])
+        .whereType<TextSpan>()
+        .where((span) => span.style?.backgroundColor != null)
+        .map((span) => span.text)
+        .toList();
+    expect(highlighted, ['ap', 'ap']);
+  });
+
+  testWidgets('structured text extensions use the text viewer', (tester) async {
+    for (final extension in [
+      'yaml',
+      'yml',
+      'xml',
+      'toml',
+      'ini',
+      'cfg',
+      'conf',
+      'properties',
+    ]) {
+      final asset = 'settings.$extension';
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: MultiAssetPlayer(
+              asset,
+              bundle: _MemoryAssetBundle({asset: 'setting=value'}),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsOneWidget, reason: extension);
+    }
   });
 
   testWidgets('JSON assets are rendered as structured data', (tester) async {

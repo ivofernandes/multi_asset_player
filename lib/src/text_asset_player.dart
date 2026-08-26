@@ -15,6 +15,7 @@ class TextAssetPlayer extends StatefulWidget {
 
 class _SearchableTextAssetState extends State<TextAssetPlayer> {
   late final Future<String> _content;
+  final _firstMatchKey = GlobalKey();
   String _query = '';
 
   @override
@@ -35,7 +36,7 @@ class _SearchableTextAssetState extends State<TextAssetPlayer> {
               hintText: 'Search text',
               prefixIcon: Icon(Icons.search),
             ),
-            onChanged: (value) => setState(() => _query = value),
+            onChanged: _search,
           ),
         ),
         Expanded(
@@ -52,22 +53,23 @@ class _SearchableTextAssetState extends State<TextAssetPlayer> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final text = snapshot.data!;
-              final matches = _query.isEmpty
-                  ? text
-                  : text
-                        .split('\n')
-                        .where(
-                          (line) => line.toLowerCase().contains(
-                            _query.toLowerCase(),
-                          ),
-                        )
-                        .join('\n');
+              final lines = snapshot.data!.split('\n');
+              var foundFirstMatch = false;
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(12),
-                child: SelectableText(
-                  matches,
-                  style: const TextStyle(fontFamily: 'monospace'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: lines.map((line) {
+                    final matches = _query.isNotEmpty &&
+                        line.toLowerCase().contains(_query.toLowerCase());
+                    final isFirstMatch = matches && !foundFirstMatch;
+                    foundFirstMatch |= matches;
+                    return SelectableText.rich(
+                      key: isFirstMatch ? _firstMatchKey : null,
+                      TextSpan(children: _highlightedSpans(context, line)),
+                      style: const TextStyle(fontFamily: 'monospace'),
+                    );
+                  }).toList(),
                 ),
               );
             },
@@ -75,5 +77,51 @@ class _SearchableTextAssetState extends State<TextAssetPlayer> {
         ),
       ],
     );
+  }
+
+  void _search(String value) {
+    setState(() => _query = value);
+    if (value.isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final matchContext = _firstMatchKey.currentContext;
+      if (matchContext != null) {
+        Scrollable.ensureVisible(
+          matchContext,
+          duration: const Duration(milliseconds: 200),
+          alignment: 0.15,
+        );
+      }
+    });
+  }
+
+  List<InlineSpan> _highlightedSpans(BuildContext context, String text) {
+    if (_query.isEmpty) return [TextSpan(text: text)];
+
+    final spans = <InlineSpan>[];
+    final lowerText = text.toLowerCase();
+    final lowerQuery = _query.toLowerCase();
+    var start = 0;
+    while (true) {
+      final match = lowerText.indexOf(lowerQuery, start);
+      if (match < 0) {
+        spans.add(TextSpan(text: text.substring(start)));
+        break;
+      }
+      if (match > start) {
+        spans.add(TextSpan(text: text.substring(start, match)));
+      }
+      spans.add(
+        TextSpan(
+          text: text.substring(match, match + _query.length),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onTertiaryContainer,
+            backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+      start = match + _query.length;
+    }
+    return spans;
   }
 }

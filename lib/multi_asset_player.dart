@@ -11,19 +11,8 @@ import 'src/csv_asset_player.dart';
 import 'src/json/json_asset_player.dart';
 import 'src/asset_message.dart';
 
-export 'src/image_asset_player.dart';
-export 'src/svg_asset_player.dart';
-export 'src/pdf_asset_player.dart';
-export 'src/html_asset_player.dart';
-export 'src/video_asset_player.dart';
-export 'src/audio_asset_player.dart';
-export 'src/text_asset_player.dart';
-export 'src/csv_asset_player.dart';
-export 'src/json/json_asset_player.dart';
-export 'src/json/json_tree_node.dart';
-
 /// The kind of viewer selected for an asset.
-enum MultiAssetType {
+enum _MultiAssetType {
   image,
   svg,
   text,
@@ -65,22 +54,22 @@ class MultiAssetPlayer extends StatelessWidget {
   final BoxFit fit;
 
   /// Determines the viewer used for [asset].
-  static MultiAssetType typeFor(String asset) {
+  static _MultiAssetType _typeFor(String asset) {
     final path = asset.split(RegExp(r'[?#]')).first.toLowerCase();
     final dot = path.lastIndexOf('.');
     final extension = dot < 0 ? '' : path.substring(dot + 1);
 
     if (const {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'}.contains(extension)) {
-      return MultiAssetType.image;
+      return _MultiAssetType.image;
     }
-    if (extension == 'svg') return MultiAssetType.svg;
-    if (extension == 'json') return MultiAssetType.json;
+    if (extension == 'svg') return _MultiAssetType.svg;
+    if (extension == 'json') return _MultiAssetType.json;
     if (const {'html', 'htm'}.contains(extension)) {
-      return MultiAssetType.html;
+      return _MultiAssetType.html;
     }
-    if (extension == 'pdf') return MultiAssetType.pdf;
+    if (extension == 'pdf') return _MultiAssetType.pdf;
     if (const {'mp4', 'm4v', 'mov', 'webm', 'avi', 'mkv'}.contains(extension)) {
-      return MultiAssetType.video;
+      return _MultiAssetType.video;
     }
     if (const {
       'mp3',
@@ -91,59 +80,72 @@ class MultiAssetPlayer extends StatelessWidget {
       'opus',
       'flac',
     }.contains(extension)) {
-      return MultiAssetType.audio;
+      return _MultiAssetType.audio;
     }
-    if (extension == 'csv') return MultiAssetType.csv;
-    if (const {'txt', 'md', 'markdown', 'log'}.contains(extension)) {
-      return MultiAssetType.text;
+    if (extension == 'csv') return _MultiAssetType.csv;
+    if (const {
+      'txt',
+      'md',
+      'markdown',
+      'log',
+      'yaml',
+      'yml',
+      'xml',
+      'toml',
+      'ini',
+      'cfg',
+      'conf',
+      'properties',
+    }.contains(extension)) {
+      return _MultiAssetType.text;
     }
-    return MultiAssetType.unsupported;
+    return _MultiAssetType.unsupported;
   }
 
   @override
   Widget build(BuildContext context) {
-    switch (typeFor(asset)) {
-      case MultiAssetType.image:
+    switch (_typeFor(asset)) {
+      case _MultiAssetType.image:
         return ImageAssetPlayer(
           asset,
           bundle: bundle,
           package: package,
           fit: fit,
         );
-      case MultiAssetType.svg:
+      case _MultiAssetType.svg:
         return SvgAssetPlayer(
           asset,
           bundle: bundle,
           package: package,
           fit: fit,
         );
-      case MultiAssetType.text:
+      case _MultiAssetType.text:
         return TextAssetPlayer(
           asset: _assetKey(asset, package),
           bundle: bundle,
         );
-      case MultiAssetType.csv:
+      case _MultiAssetType.csv:
         return CsvAssetPlayer(
           asset: _assetKey(asset, package),
           bundle: bundle,
         );
-      case MultiAssetType.json:
+      case _MultiAssetType.json:
         return JsonAssetPlayer(
           asset: _assetKey(asset, package),
           bundle: bundle,
         );
-      case MultiAssetType.html:
+      case _MultiAssetType.html:
         return HtmlAssetPlayer(
           asset: _assetKey(asset, package),
           bundle: bundle,
         );
-      case MultiAssetType.pdf:
+      case _MultiAssetType.pdf:
         return PdfAssetPlayer(asset: _assetKey(asset, package));
-      case MultiAssetType.video:
+      case _MultiAssetType.video:
         return VideoAssetPlayer(asset: asset, package: package);
-      case MultiAssetType.audio:
+      case _MultiAssetType.audio:
         return AudioAssetPlayer(asset: _assetKey(asset, package));
-      case MultiAssetType.unsupported:
+      case _MultiAssetType.unsupported:
         return AssetMessage(
           icon: Icons.insert_drive_file_outlined,
           message: 'Unsupported asset type: $asset',

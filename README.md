@@ -7,7 +7,8 @@ asset formats. It selects a suitable viewer from the filename extension:
 - SVG files use `flutter_svg`.
 - JSON files use a built-in expandable navigation tree.
 - HTML and HTM files run in a WebView with JavaScript enabled.
-- TXT, Markdown, and log files use a selectable, searchable text viewer.
+- TXT, Markdown, log, YAML, XML, TOML, INI, config, and properties files use a
+  selectable, searchable text viewer.
 - CSV files use a scrollable data table with a dedicated CSV parser.
 - PDF files use an interactive document viewer.
 - MP4, M4V, MOV, WebM, AVI, and MKV files use a video player.
@@ -43,15 +44,11 @@ const MultiAssetPlayer('assets/demo.mp4')
 const MultiAssetPlayer('assets/song.mp3')
 ```
 
-`MultiAssetPlayer` delegates to a dedicated public widget for each format:
-`ImageAssetPlayer`, `SvgAssetPlayer`, `TextAssetPlayer`, `CsvAssetPlayer`,
-`JsonAssetPlayer`, `HtmlAssetPlayer`, `PdfAssetPlayer`, `VideoAssetPlayer`, or
-`AudioAssetPlayer`. These widgets can also be used directly when the asset type
-is already known. Each player has its own implementation file under `lib/src/`;
-the JSON player uses a subfolder so its loader and recursive tree node remain
-separate.
+`MultiAssetPlayer` is the package's single public widget. It delegates internally
+to the appropriate viewer for the selected file.
 
-Text files include a search box that filters the document to matching lines.
+Text-file searches preserve the full document, highlight every match, and scroll
+the first match into view.
 HTML assets are loaded into an embedded WebView, so their markup, CSS, and
 JavaScript remain interactive.
 JSON is validated before it is displayed; malformed documents produce a clear
