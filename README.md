@@ -5,11 +5,11 @@ asset formats. It selects a suitable viewer from the filename extension:
 
 - PNG, JPEG, GIF, WebP, and BMP files use Flutter's image viewer.
 - SVG files use `flutter_svg`.
-- JSON files use a built-in expandable navigation tree.
+- JSON files use a searchable, expandable navigation tree.
 - HTML and HTM files run in a WebView with JavaScript enabled.
 - TXT, Markdown, log, YAML, XML, TOML, INI, config, and properties files use a
   selectable, searchable text viewer.
-- CSV files use a scrollable data table with a dedicated CSV parser.
+- CSV files use a searchable, scrollable data table with a dedicated CSV parser.
 - PDF files use an interactive document viewer.
 - MP4, M4V, MOV, WebM, AVI, and MKV files use a video player.
 - MP3, WAV, M4A, AAC, Ogg, Opus, and FLAC files use an audio player.
@@ -47,15 +47,17 @@ const MultiAssetPlayer('assets/song.mp3')
 `MultiAssetPlayer` is the package's single public widget. It delegates internally
 to the appropriate viewer for the selected file.
 
-Text-file searches preserve the full document, highlight every match, and scroll
-the first match into view.
+Text, CSV, and JSON searches preserve the full content and highlight every
+match. Text searches scroll the first match into view, while JSON searches
+automatically expand matching branches.
 HTML assets are loaded into an embedded WebView, so their markup, CSS, and
 JavaScript remain interactive.
 JSON is validated before it is displayed; malformed documents produce a clear
 error state instead of an empty viewer. Objects and arrays can be expanded and
 collapsed without an external JSON-viewer dependency. Video controls include
 scrubbing and a play/pause button that stays synchronized with the player's
-current state.
+current state. Audio and video controls show both elapsed and total playback
+time.
 Use `fit` to control image layout, `package` for assets supplied by another
 package, or `bundle` to provide a custom `AssetBundle`.
 

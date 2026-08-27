@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'asset_message.dart';
+import 'media_time.dart';
 
 /// Displays a video asset with playback and scrubbing controls.
 class VideoAssetPlayer extends StatefulWidget {
@@ -16,7 +17,6 @@ class VideoAssetPlayer extends StatefulWidget {
 class _VideoAssetState extends State<VideoAssetPlayer> {
   late final VideoPlayerController _controller;
   late final Future<void> _initialized;
-  bool _isPlaying = false;
 
   @override
   void initState() {
@@ -25,20 +25,11 @@ class _VideoAssetState extends State<VideoAssetPlayer> {
       widget.asset,
       package: widget.package,
     );
-    _controller.addListener(_handleControllerUpdate);
     _initialized = _controller.initialize();
-  }
-
-  void _handleControllerUpdate() {
-    final isPlaying = _controller.value.isPlaying;
-    if (mounted && isPlaying != _isPlaying) {
-      setState(() => _isPlaying = isPlaying);
-    }
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_handleControllerUpdate);
     _controller.dispose();
     super.dispose();
   }
@@ -57,26 +48,30 @@ class _VideoAssetState extends State<VideoAssetPlayer> {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Center(child: CircularProgressIndicator());
         }
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: VideoPlayer(_controller),
+        return ValueListenableBuilder<VideoPlayerValue>(
+          valueListenable: _controller,
+          builder: (context, value, child) => Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Center(
+                  child: AspectRatio(
+                    aspectRatio: value.aspectRatio,
+                    child: VideoPlayer(_controller),
+                  ),
                 ),
               ),
-            ),
-            VideoProgressIndicator(_controller, allowScrubbing: true),
-            IconButton(
-              tooltip: _isPlaying ? 'Pause' : 'Play',
-              icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
-              onPressed: () {
-                _isPlaying ? _controller.pause() : _controller.play();
-              },
-            ),
-          ],
+              VideoProgressIndicator(_controller, allowScrubbing: true),
+              Text(mediaTimerLabel(value.position, value.duration)),
+              IconButton(
+                tooltip: value.isPlaying ? 'Pause' : 'Play',
+                icon: Icon(value.isPlaying ? Icons.pause : Icons.play_arrow),
+                onPressed: () {
+                  value.isPlaying ? _controller.pause() : _controller.play();
+                },
+              ),
+            ],
+          ),
         );
       },
     );

@@ -17,6 +17,7 @@ class JsonAssetPlayer extends StatefulWidget {
 
 class _JsonAssetState extends State<JsonAssetPlayer> {
   late final Future<Object?> _content;
+  String _query = '';
 
   @override
   void initState() {
@@ -31,23 +32,45 @@ class _JsonAssetState extends State<JsonAssetPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Object?>(
-      future: _content,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return AssetMessage(
-            icon: Icons.error_outline,
-            message: 'Unable to parse ${widget.asset} as JSON',
-          );
-        }
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return SingleChildScrollView(
+    return Column(
+      children: [
+        Padding(
           padding: const EdgeInsets.all(8),
-          child: JsonTreeNode(value: snapshot.data, expanded: true),
-        );
-      },
+          child: TextField(
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'Search JSON',
+              prefixIcon: Icon(Icons.search),
+            ),
+            onChanged: (value) => setState(() => _query = value),
+          ),
+        ),
+        Expanded(
+          child: FutureBuilder<Object?>(
+            future: _content,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return AssetMessage(
+                  icon: Icons.error_outline,
+                  message: 'Unable to parse ${widget.asset} as JSON',
+                );
+              }
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(8),
+                child: JsonTreeNode(
+                  key: ValueKey(_query),
+                  value: snapshot.data,
+                  expanded: true,
+                  query: _query,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multi_asset_player/multi_asset_player.dart';
+import 'package:multi_asset_player/src/media_time.dart';
 
 void main() {
   testWidgets('selects viewers through the single public widget', (tester) async {
@@ -43,6 +44,31 @@ void main() {
 
     expect(find.byType(DataTable), findsOneWidget);
     expect(find.text('includes, comma'), findsOneWidget);
+  });
+
+  testWidgets('CSV search highlights matching cell text', (tester) async {
+    final bundle = _MemoryAssetBundle({
+      'table.csv': 'name,description\none,Searchable value',
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MultiAssetPlayer('table.csv', bundle: bundle),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'search');
+    await tester.pump();
+
+    final matches = tester
+        .widgetList<RichText>(find.byType(RichText))
+        .expand((text) => text.text.children ?? const <InlineSpan>[])
+        .whereType<TextSpan>()
+        .where((span) => span.style?.backgroundColor != null)
+        .map((span) => span.text);
+    expect(matches, contains('Search'));
   });
 
   testWidgets('text search highlights matches without filtering lines', (
@@ -116,6 +142,43 @@ void main() {
     expect(find.textContaining('enabled'), findsWidgets);
     expect(find.textContaining('items'), findsWidgets);
     expect(find.textContaining('Unable to parse'), findsNothing);
+  });
+
+  testWidgets('JSON search expands and highlights nested matches', (
+    tester,
+  ) async {
+    final bundle = _MemoryAssetBundle({
+      'config.json': '{"nested":{"label":"Searchable value"}}',
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MultiAssetPlayer('config.json', bundle: bundle),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'search');
+    await tester.pumpAndSettle();
+
+    final highlighted = tester
+        .widgetList<RichText>(find.byType(RichText))
+        .expand((text) => text.text.children ?? const <InlineSpan>[])
+        .whereType<TextSpan>()
+        .where((span) => span.style?.backgroundColor != null)
+        .map((span) => span.text);
+    expect(highlighted, contains('Search'));
+  });
+
+  test('media timer labels elapsed and total time', () {
+    expect(
+      mediaTimerLabel(
+        const Duration(minutes: 2, seconds: 3),
+        const Duration(hours: 1, minutes: 4, seconds: 5),
+      ),
+      '02:03 / 1:04:05',
+    );
   });
 
   testWidgets('invalid JSON assets show a useful error', (tester) async {

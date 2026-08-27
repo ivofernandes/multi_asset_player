@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'asset_message.dart';
+import 'media_time.dart';
 
 /// Displays an audio asset with playback and seeking controls.
 class AudioAssetPlayer extends StatefulWidget {
@@ -60,17 +61,26 @@ class _AudioAssetState extends State<AudioAssetPlayer> {
                     builder: (context, position) {
                       final duration = _player.duration ?? Duration.zero;
                       final value = position.data ?? Duration.zero;
-                      return Slider(
-                        max: duration.inMilliseconds
-                            .toDouble()
-                            .clamp(1.0, double.infinity)
-                            .toDouble(),
-                        value: value.inMilliseconds
-                            .clamp(0, duration.inMilliseconds)
-                            .toDouble(),
-                        onChanged: (milliseconds) => _player.seek(
-                          Duration(milliseconds: milliseconds.round()),
-                        ),
+                      final positionValue = Duration(
+                        milliseconds: value.inMilliseconds.clamp(
+                          0,
+                          duration.inMilliseconds,
+                        ).toInt(),
+                      );
+                      return Column(
+                        children: [
+                          Slider(
+                            max: duration.inMilliseconds
+                                .toDouble()
+                                .clamp(1.0, double.infinity)
+                                .toDouble(),
+                            value: positionValue.inMilliseconds.toDouble(),
+                            onChanged: (milliseconds) => _player.seek(
+                              Duration(milliseconds: milliseconds.round()),
+                            ),
+                          ),
+                          Text(mediaTimerLabel(positionValue, duration)),
+                        ],
                       );
                     },
                   ),

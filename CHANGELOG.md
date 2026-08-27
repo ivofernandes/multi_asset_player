@@ -1,3 +1,8 @@
+## Unreleased
+
+* Add search and match highlighting to CSV and JSON viewers.
+* Show elapsed and total time in audio and video players.
+
 ## 0.0.2
 
 * Add interactive HTML and HTM asset playback using a JavaScript-enabled
