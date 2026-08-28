@@ -1,6 +1,8 @@
-# example
+# Multi Asset Player example
 
-A new Flutter project.
+The example discovers all bundled files in `assets/` and displays them with
+`MultiAssetPlayer`. Use the link button in the app bar to enter any supported
+HTTP or HTTPS URL and preview it with the same player.
 
 ## Getting Started
 

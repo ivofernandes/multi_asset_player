@@ -5,10 +5,16 @@ import 'media_time.dart';
 
 /// Displays a video asset with playback and scrubbing controls.
 class VideoAssetPlayer extends StatefulWidget {
-  const VideoAssetPlayer({super.key, required this.asset, this.package});
+  const VideoAssetPlayer({
+    super.key,
+    required this.asset,
+    this.package,
+    this.network = false,
+  });
 
   final String asset;
   final String? package;
+  final bool network;
 
   @override
   State<VideoAssetPlayer> createState() => _VideoAssetState();
@@ -21,10 +27,12 @@ class _VideoAssetState extends State<VideoAssetPlayer> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset(
-      widget.asset,
-      package: widget.package,
-    );
+    _controller = widget.network
+        ? VideoPlayerController.networkUrl(Uri.parse(widget.asset))
+        : VideoPlayerController.asset(
+            widget.asset,
+            package: widget.package,
+          );
     _initialized = _controller.initialize();
   }
 

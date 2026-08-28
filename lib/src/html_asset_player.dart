@@ -5,10 +5,16 @@ import 'asset_message.dart';
 
 /// Displays an HTML asset in an interactive WebView.
 class HtmlAssetPlayer extends StatefulWidget {
-  const HtmlAssetPlayer({super.key, required this.asset, this.bundle});
+  const HtmlAssetPlayer({
+    super.key,
+    required this.asset,
+    this.bundle,
+    this.network = false,
+  });
 
   final String asset;
   final AssetBundle? bundle;
+  final bool network;
 
   @override
   State<HtmlAssetPlayer> createState() => _HtmlAssetState();
@@ -18,11 +24,15 @@ class _HtmlAssetState extends State<HtmlAssetPlayer> {
   late final Future<WebViewController> _controller = _initialize();
 
   Future<WebViewController> _initialize() async {
-    final html = await (widget.bundle ?? rootBundle).loadString(widget.asset);
     final controller = WebViewController();
     await controller.setJavaScriptMode(JavaScriptMode.unrestricted);
     await controller.setBackgroundColor(Colors.transparent);
-    await controller.loadHtmlString(html);
+    if (widget.network) {
+      await controller.loadRequest(Uri.parse(widget.asset));
+    } else {
+      final html = await (widget.bundle ?? rootBundle).loadString(widget.asset);
+      await controller.loadHtmlString(html);
+    }
     return controller;
   }
 

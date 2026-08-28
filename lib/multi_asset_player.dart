@@ -10,6 +10,7 @@ import 'src/text_asset_player.dart';
 import 'src/csv_asset_player.dart';
 import 'src/json/json_asset_player.dart';
 import 'src/asset_message.dart';
+import 'src/source.dart';
 
 /// The kind of viewer selected for an asset.
 enum _MultiAssetType {
@@ -25,12 +26,13 @@ enum _MultiAssetType {
   unsupported,
 }
 
-/// Displays a bundled asset with a viewer selected from its file extension.
+/// Displays a local asset or URL with a viewer selected from its extension.
 ///
 /// Add the file to the application's `flutter.assets` list, then use it with:
 ///
 /// ```dart
 /// const MultiAssetPlayer('assets/logo.png')
+/// const MultiAssetPlayer('https://example.com/logo.png')
 /// ```
 class MultiAssetPlayer extends StatelessWidget {
   const MultiAssetPlayer(
@@ -41,7 +43,7 @@ class MultiAssetPlayer extends StatelessWidget {
     this.fit = BoxFit.contain,
   });
 
-  /// The asset key registered in `pubspec.yaml`.
+  /// An asset key registered in `pubspec.yaml`, or an HTTP(S) URL.
   final String asset;
 
   /// An optional bundle, primarily useful for custom asset sources and tests.
@@ -104,6 +106,7 @@ class MultiAssetPlayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final network = isNetworkSource(asset);
     switch (_typeFor(asset)) {
       case _MultiAssetType.image:
         return ImageAssetPlayer(
@@ -111,6 +114,7 @@ class MultiAssetPlayer extends StatelessWidget {
           bundle: bundle,
           package: package,
           fit: fit,
+          network: network,
         );
       case _MultiAssetType.svg:
         return SvgAssetPlayer(
@@ -118,33 +122,38 @@ class MultiAssetPlayer extends StatelessWidget {
           bundle: bundle,
           package: package,
           fit: fit,
+          network: network,
         );
       case _MultiAssetType.text:
         return TextAssetPlayer(
           asset: _assetKey(asset, package),
-          bundle: bundle,
+          bundle: bundleForSource(asset, bundle),
         );
       case _MultiAssetType.csv:
         return CsvAssetPlayer(
           asset: _assetKey(asset, package),
-          bundle: bundle,
+          bundle: bundleForSource(asset, bundle),
         );
       case _MultiAssetType.json:
         return JsonAssetPlayer(
           asset: _assetKey(asset, package),
-          bundle: bundle,
+          bundle: bundleForSource(asset, bundle),
         );
       case _MultiAssetType.html:
         return HtmlAssetPlayer(
           asset: _assetKey(asset, package),
           bundle: bundle,
+          network: network,
         );
       case _MultiAssetType.pdf:
-        return PdfAssetPlayer(asset: _assetKey(asset, package));
+        return PdfAssetPlayer(asset: _assetKey(asset, package), network: network);
       case _MultiAssetType.video:
-        return VideoAssetPlayer(asset: asset, package: package);
+        return VideoAssetPlayer(asset: asset, package: package, network: network);
       case _MultiAssetType.audio:
-        return AudioAssetPlayer(asset: _assetKey(asset, package));
+        return AudioAssetPlayer(
+          asset: _assetKey(asset, package),
+          network: network,
+        );
       case _MultiAssetType.unsupported:
         return AssetMessage(
           icon: Icons.insert_drive_file_outlined,
@@ -154,6 +163,8 @@ class MultiAssetPlayer extends StatelessWidget {
   }
 
   static String _assetKey(String asset, String? package) {
-    return package == null ? asset : 'packages/$package/$asset';
+    return package == null || isNetworkSource(asset)
+        ? asset
+        : 'packages/$package/$asset';
   }
 }

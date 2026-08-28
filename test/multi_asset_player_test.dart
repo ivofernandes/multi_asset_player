@@ -5,6 +5,19 @@ import 'package:multi_asset_player/multi_asset_player.dart';
 import 'package:multi_asset_player/src/media_time.dart';
 
 void main() {
+  testWidgets('HTTP URLs use network providers with the same constructor', (
+    tester,
+  ) async {
+    const url = 'https://example.com/image.png?version=2';
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: MultiAssetPlayer(url))),
+    );
+
+    final image = tester.widget<Image>(find.byType(Image));
+    expect(image.image, isA<NetworkImage>());
+    expect((image.image as NetworkImage).url, url);
+  });
+
   testWidgets('selects viewers through the single public widget', (tester) async {
     final bundle = _MemoryAssetBundle({
       'notes.txt': 'hello',

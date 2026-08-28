@@ -10,19 +10,26 @@ class SvgAssetPlayer extends StatelessWidget {
     this.bundle,
     this.package,
     this.fit = BoxFit.contain,
+    this.network = false,
   });
 
   final String asset;
   final AssetBundle? bundle;
   final String? package;
   final BoxFit fit;
+  final bool network;
 
   @override
-  Widget build(BuildContext context) => SvgPicture.asset(
-    asset,
-    bundle: bundle,
-    package: package,
-    fit: fit,
-    placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
-  );
+  Widget build(BuildContext context) {
+    final placeholder = (_) => const Center(child: CircularProgressIndicator());
+    return network
+        ? SvgPicture.network(asset, fit: fit, placeholderBuilder: placeholder)
+        : SvgPicture.asset(
+            asset,
+            bundle: bundle,
+            package: package,
+            fit: fit,
+            placeholderBuilder: placeholder,
+          );
+  }
 }

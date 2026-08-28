@@ -1,7 +1,7 @@
 # Multi Asset Player
 
-`MultiAssetPlayer` is one Flutter widget for displaying several common bundled
-asset formats. It selects a suitable viewer from the filename extension:
+`MultiAssetPlayer` is one Flutter widget for displaying common local assets and
+HTTP(S) URLs. It selects a suitable viewer from the filename extension:
 
 - PNG, JPEG, GIF, WebP, and BMP files use Flutter's image viewer.
 - SVG files use `flutter_svg`.
@@ -31,6 +31,16 @@ import 'package:multi_asset_player/multi_asset_player.dart';
 
 const MultiAssetPlayer('assets/logo.png')
 ```
+
+Or pass a URL directly—there is no separate network constructor or setup:
+
+```dart
+const MultiAssetPlayer('https://example.com/logo.png')
+const MultiAssetPlayer('https://example.com/manual.pdf')
+const MultiAssetPlayer('https://example.com/data.json?version=2')
+```
+
+Local assets still need to be registered in `pubspec.yaml`; URLs do not.
 
 The same API works for every supported format:
 

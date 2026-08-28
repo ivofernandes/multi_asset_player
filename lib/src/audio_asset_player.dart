@@ -5,9 +5,14 @@ import 'media_time.dart';
 
 /// Displays an audio asset with playback and seeking controls.
 class AudioAssetPlayer extends StatefulWidget {
-  const AudioAssetPlayer({super.key, required this.asset});
+  const AudioAssetPlayer({
+    super.key,
+    required this.asset,
+    this.network = false,
+  });
 
   final String asset;
+  final bool network;
 
   @override
   State<AudioAssetPlayer> createState() => _AudioAssetState();
@@ -21,7 +26,9 @@ class _AudioAssetState extends State<AudioAssetPlayer> {
   void initState() {
     super.initState();
     _player = AudioPlayer();
-    _initialized = _player.setAsset(widget.asset);
+    _initialized = widget.network
+        ? _player.setUrl(widget.asset)
+        : _player.setAsset(widget.asset);
   }
 
   @override

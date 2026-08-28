@@ -47,7 +47,16 @@ class _AssetGalleryState extends State<AssetGallery> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Asset manifest gallery')),
+      appBar: AppBar(
+        title: const Text('Multi Asset Player'),
+        actions: [
+          IconButton(
+            tooltip: 'Open URL',
+            icon: const Icon(Icons.link),
+            onPressed: _openUrl,
+          ),
+        ],
+      ),
       body: FutureBuilder<List<String>>(
         future: _assets,
         builder: (context, snapshot) {
@@ -98,6 +107,65 @@ class _AssetGalleryState extends State<AssetGallery> {
 
   void _selectAsset(String asset) => setState(() => _selectedAsset = asset);
 
+  Future<void> _openUrl() async {
+    var input = (_selectedAsset?.startsWith('http') ?? false)
+        ? _selectedAsset!
+        : '';
+    final formKey = GlobalKey<FormState>();
+    final url = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Open URL'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            initialValue: input,
+            autofocus: true,
+            keyboardType: TextInputType.url,
+            textInputAction: TextInputAction.go,
+            decoration: const InputDecoration(
+              labelText: 'URL',
+              hintText: 'https://example.com/image.png',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              final uri = Uri.tryParse(value?.trim() ?? '');
+              if (uri == null ||
+                  !const {'http', 'https'}.contains(uri.scheme) ||
+                  uri.host.isEmpty) {
+                return 'Enter a valid HTTP or HTTPS URL';
+              }
+              return null;
+            },
+            onChanged: (value) => input = value,
+            onFieldSubmitted: (value) => _submitUrl(context, formKey, value),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => _submitUrl(context, formKey, input),
+            child: const Text('Open'),
+          ),
+        ],
+      ),
+    );
+    if (url != null) _selectAsset(url);
+  }
+
+  void _submitUrl(
+    BuildContext dialogContext,
+    GlobalKey<FormState> formKey,
+    String url,
+  ) {
+    if (formKey.currentState!.validate()) {
+      Navigator.pop(dialogContext, url.trim());
+    }
+  }
+
   Widget _playerFor(String asset) => MultiAssetPlayer(
     asset,
     key: ValueKey(asset),
@@ -120,7 +188,9 @@ class _CompactGallery extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final filename = selected.substring('assets/'.length);
+    final filename = selected.startsWith('assets/')
+        ? selected.substring('assets/'.length)
+        : selected;
     return Column(
       children: [
         Material(
