@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 /// Displays an SVG asset.
@@ -21,7 +20,9 @@ class SvgAssetPlayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final placeholder = (_) => const Center(child: CircularProgressIndicator());
+    Widget placeholder(BuildContext context) =>
+        const Center(child: CircularProgressIndicator());
+
     return network
         ? SvgPicture.network(asset, fit: fit, placeholderBuilder: placeholder)
         : SvgPicture.asset(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AssetMessage extends StatelessWidget {
-  const AssetMessage({required this.icon, required this.message});
+  const AssetMessage({super.key, required this.icon, required this.message});
 
   final IconData icon;
   final String message;

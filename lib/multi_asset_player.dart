@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
 import 'src/image_asset_player.dart';
 import 'src/svg_asset_player.dart';
 import 'src/pdf_asset_player.dart';
@@ -61,7 +61,14 @@ class MultiAssetPlayer extends StatelessWidget {
     final dot = path.lastIndexOf('.');
     final extension = dot < 0 ? '' : path.substring(dot + 1);
 
-    if (const {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'}.contains(extension)) {
+    if (const {
+      'png',
+      'jpg',
+      'jpeg',
+      'gif',
+      'webp',
+      'bmp',
+    }.contains(extension)) {
       return _MultiAssetType.image;
     }
     if (extension == 'svg') return _MultiAssetType.svg;
@@ -146,9 +153,16 @@ class MultiAssetPlayer extends StatelessWidget {
           network: network,
         );
       case _MultiAssetType.pdf:
-        return PdfAssetPlayer(asset: _assetKey(asset, package), network: network);
+        return PdfAssetPlayer(
+          asset: _assetKey(asset, package),
+          network: network,
+        );
       case _MultiAssetType.video:
-        return VideoAssetPlayer(asset: asset, package: package, network: network);
+        return VideoAssetPlayer(
+          asset: asset,
+          package: package,
+          network: network,
+        );
       case _MultiAssetType.audio:
         return AudioAssetPlayer(
           asset: _assetKey(asset, package),

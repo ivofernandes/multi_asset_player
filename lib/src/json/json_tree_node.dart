@@ -42,11 +42,8 @@ class JsonTreeNode extends StatelessWidget {
         title: _highlightedText(context, '$prefix[${items.length}]'),
         children: List.generate(
           items.length,
-          (index) => JsonTreeNode(
-            name: '[$index]',
-            value: items[index],
-            query: query,
-          ),
+          (index) =>
+              JsonTreeNode(name: '[$index]', value: items[index], query: query),
         ),
       );
     }
@@ -117,7 +114,10 @@ class JsonTreeNode extends StatelessWidget {
       start = match + query.length;
     }
     return Text.rich(
-      TextSpan(style: TextStyle(color: baseColor), children: spans),
+      TextSpan(
+        style: TextStyle(color: baseColor),
+        children: spans,
+      ),
     );
   }
 }

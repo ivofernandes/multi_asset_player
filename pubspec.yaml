@@ -1,7 +1,8 @@
 name: multi_asset_player
 description: A Flutter widget for presenting images, documents, media, HTML, text, and JSON from assets or URLs.
 version: 0.0.1
-homepage:
+homepage: https://turingdeal.com
+repository: https://github.com/ivofernandes/multi_asset_player
 
 environment:
   sdk: ^3.12.2

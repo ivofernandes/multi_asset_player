@@ -18,7 +18,9 @@ void main() {
     expect((image.image as NetworkImage).url, url);
   });
 
-  testWidgets('selects viewers through the single public widget', (tester) async {
+  testWidgets('selects viewers through the single public widget', (
+    tester,
+  ) async {
     final bundle = _MemoryAssetBundle({
       'notes.txt': 'hello',
       'table.csv': 'name,value\none,1',
@@ -32,9 +34,7 @@ void main() {
     }.entries) {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: MultiAssetPlayer(entry.key, bundle: bundle),
-          ),
+          home: Scaffold(body: MultiAssetPlayer(entry.key, bundle: bundle)),
         ),
       );
       await tester.pumpAndSettle();
@@ -48,9 +48,7 @@ void main() {
     });
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: MultiAssetPlayer('table.csv', bundle: bundle),
-        ),
+        home: Scaffold(body: MultiAssetPlayer('table.csv', bundle: bundle)),
       ),
     );
     await tester.pumpAndSettle();
@@ -65,9 +63,7 @@ void main() {
     });
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: MultiAssetPlayer('table.csv', bundle: bundle),
-        ),
+        home: Scaffold(body: MultiAssetPlayer('table.csv', bundle: bundle)),
       ),
     );
     await tester.pumpAndSettle();
@@ -77,7 +73,9 @@ void main() {
 
     final matches = tester
         .widgetList<RichText>(find.byType(RichText))
-        .expand((text) => text.text.children ?? const <InlineSpan>[])
+        .map((text) => text.text)
+        .whereType<TextSpan>()
+        .expand((span) => span.children ?? const <InlineSpan>[])
         .whereType<TextSpan>()
         .where((span) => span.style?.backgroundColor != null)
         .map((span) => span.text);
@@ -145,9 +143,7 @@ void main() {
     });
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: MultiAssetPlayer('config.json', bundle: bundle),
-        ),
+        home: Scaffold(body: MultiAssetPlayer('config.json', bundle: bundle)),
       ),
     );
     await tester.pumpAndSettle();
@@ -165,9 +161,7 @@ void main() {
     });
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: MultiAssetPlayer('config.json', bundle: bundle),
-        ),
+        home: Scaffold(body: MultiAssetPlayer('config.json', bundle: bundle)),
       ),
     );
     await tester.pumpAndSettle();
@@ -177,7 +171,9 @@ void main() {
 
     final highlighted = tester
         .widgetList<RichText>(find.byType(RichText))
-        .expand((text) => text.text.children ?? const <InlineSpan>[])
+        .map((text) => text.text)
+        .whereType<TextSpan>()
+        .expand((span) => span.children ?? const <InlineSpan>[])
         .whereType<TextSpan>()
         .where((span) => span.style?.backgroundColor != null)
         .map((span) => span.text);
@@ -198,17 +194,12 @@ void main() {
     final bundle = _MemoryAssetBundle({'broken.json': '{not json'});
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: MultiAssetPlayer('broken.json', bundle: bundle),
-        ),
+        home: Scaffold(body: MultiAssetPlayer('broken.json', bundle: bundle)),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('Unable to parse broken.json as JSON'),
-      findsOneWidget,
-    );
+    expect(find.text('Unable to parse broken.json as JSON'), findsOneWidget);
   });
 
   testWidgets('unsupported assets show a useful message', (tester) async {

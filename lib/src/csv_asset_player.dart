@@ -98,18 +98,21 @@ class _CsvAssetPlayerState extends State<CsvAssetPlayer> {
                         ),
                       ),
                     ),
-                    rows: rows.skip(1).map(
-                      (row) => DataRow(
-                        cells: List.generate(
-                          columnCount,
-                          (index) => DataCell(
-                            _highlightedText(
-                              index < row.length ? row[index] : '',
+                    rows: rows
+                        .skip(1)
+                        .map(
+                          (row) => DataRow(
+                            cells: List.generate(
+                              columnCount,
+                              (index) => DataCell(
+                                _highlightedText(
+                                  index < row.length ? row[index] : '',
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    ).toList(),
+                        )
+                        .toList(),
                   ),
                 ),
               ),

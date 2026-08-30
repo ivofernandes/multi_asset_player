@@ -166,11 +166,8 @@ class _AssetGalleryState extends State<AssetGallery> {
     }
   }
 
-  Widget _playerFor(String asset) => MultiAssetPlayer(
-    asset,
-    key: ValueKey(asset),
-    bundle: widget.bundle,
-  );
+  Widget _playerFor(String asset) =>
+      MultiAssetPlayer(asset, key: ValueKey(asset), bundle: widget.bundle);
 }
 
 class _CompactGallery extends StatelessWidget {

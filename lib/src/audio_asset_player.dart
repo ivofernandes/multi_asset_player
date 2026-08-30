@@ -69,10 +69,9 @@ class _AudioAssetState extends State<AudioAssetPlayer> {
                       final duration = _player.duration ?? Duration.zero;
                       final value = position.data ?? Duration.zero;
                       final positionValue = Duration(
-                        milliseconds: value.inMilliseconds.clamp(
-                          0,
-                          duration.inMilliseconds,
-                        ).toInt(),
+                        milliseconds: value.inMilliseconds
+                            .clamp(0, duration.inMilliseconds)
+                            .toInt(),
                       );
                       return Column(
                         children: [

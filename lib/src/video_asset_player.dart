@@ -29,10 +29,7 @@ class _VideoAssetState extends State<VideoAssetPlayer> {
     super.initState();
     _controller = widget.network
         ? VideoPlayerController.networkUrl(Uri.parse(widget.asset))
-        : VideoPlayerController.asset(
-            widget.asset,
-            package: widget.package,
-          );
+        : VideoPlayerController.asset(widget.asset, package: widget.package);
     _initialized = _controller.initialize();
   }
 

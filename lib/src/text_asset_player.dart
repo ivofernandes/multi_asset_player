@@ -60,7 +60,8 @@ class _SearchableTextAssetState extends State<TextAssetPlayer> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: lines.map((line) {
-                    final matches = _query.isNotEmpty &&
+                    final matches =
+                        _query.isNotEmpty &&
                         line.toLowerCase().contains(_query.toLowerCase());
                     final isFirstMatch = matches && !foundFirstMatch;
                     foundFirstMatch |= matches;

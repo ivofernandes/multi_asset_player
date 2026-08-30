@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
 import 'asset_message.dart';
 
 /// Displays a raster image asset.
