@@ -73,10 +73,7 @@ void main() {
 
     final matches = tester
         .widgetList<RichText>(find.byType(RichText))
-        .map((text) => text.text)
-        .whereType<TextSpan>()
-        .expand((span) => span.children ?? const <InlineSpan>[])
-        .whereType<TextSpan>()
+        .expand((text) => _descendantTextSpans(text.text))
         .where((span) => span.style?.backgroundColor != null)
         .map((span) => span.text);
     expect(matches, contains('Search'));
@@ -171,10 +168,7 @@ void main() {
 
     final highlighted = tester
         .widgetList<RichText>(find.byType(RichText))
-        .map((text) => text.text)
-        .whereType<TextSpan>()
-        .expand((span) => span.children ?? const <InlineSpan>[])
-        .whereType<TextSpan>()
+        .expand((text) => _descendantTextSpans(text.text))
         .where((span) => span.style?.backgroundColor != null)
         .map((span) => span.text);
     expect(highlighted, contains('Search'));
@@ -213,6 +207,15 @@ void main() {
       findsOneWidget,
     );
   });
+}
+
+Iterable<TextSpan> _descendantTextSpans(InlineSpan span) sync* {
+  if (span case final TextSpan textSpan) {
+    yield textSpan;
+    for (final child in textSpan.children ?? const <InlineSpan>[]) {
+      yield* _descendantTextSpans(child);
+    }
+  }
 }
 
 class _MemoryAssetBundle extends CachingAssetBundle {
